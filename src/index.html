@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Accessible YouTube</title>
+<style type="text/css">
+@import "http://ajax.googleapis.com/ajax/libs/dojo/1.6.0/dojo/resources/dojo.css";
+@import "http://ajax.googleapis.com/ajax/libs/dojo/1.6.0/dijit/themes/claro/claro.css";
+@import "application.css";
+</style>
+<script type="text/javascript">
+var djConfig = {
+isDebug: false,
+parseOnLoad: true,
+baseUrl: './',
+modulePaths: {'youtube' : 'widgets'}
+};
+</script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/dojo/1.6.0/dojo/dojo.xd.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js"></script>
+<script type="text/javascript" src="/libs/uow/trace.js"></script>
+<script type="text/javascript" src="/libs/uow.js"></script>
+<script type="text/javascript" src="application.js"></script>
+</head>
+<body class="claro">
+<div id="hd">
+<div id="hd-title"><span class="home-link link">Accessible YouTube</span></div>
+<div id="hd-homeicon"><span class="home-link link" title="Go home."><img class="i" src="i/house.jpg" alt="Go home."/></span></div>
+</div>
+<div id="splash" class="page">
+<p>
+Welcome to Accessible YouTube, an interface to <a href="http://www.youtube.com/">YouTube</a> designed for people who access their computers via either 2 switches or a mouse. It allows the user to use two keys/switches or a mouse to navigate through a list of videos, and watch any or all of them. Currently the list of videos can be a playlist, the results of a video search, the related videos for a particular video, or YouTube's most popular videos.
+</p>
+<p>Note the little home icon <img id="splash-homeicon" class="i" src="i/house.jpg" alt="home icon" title="Go home"> in the upper left corner of the page. Clicking it will bring you back here.</p>
+<p><strong>Warning</strong>: This interface allows unfiltered access to YouTube videos, some of which are not appropriate for all viewers.</p>
+<p>Ready to get started?</p>
+<ul id="splash-list">
+<li><span id="most_popular-link" class="link">Browse YouTube's most popular videos.</span></li>
+<li><div id="search">Search YouTube videos:<input id="sB" type="text" value="kittens" spellcheck="false"/><input id="b_search" type="submit" value="Go"/></div></li>
+<li>See <span id="options-link" class="link">advanced options</span>.</li>
+</ul>
+<p>Please send comments and suggestions to <a href="mailto:ayt-comments@cs.unc.edu">ayt-comments@cs.unc.edu</a>. Thanks!</p>
+</div>
+<div id="main" class="page">
+<div id="pW"></div>
+<div id="m">
+<div id="vD"><div id="iVD">Loading...</div></div>
+<div id="controls">
+<ul id="control-list" class="inactive">
+<li id="pause">Pause</li>
+<li id="change">Choose another movie</li>
+<li id="beginning">Go to beginning</li>
+<li id="back">Go back 10 seconds</li>
+<li id="forward">Go forward 10 seconds</li>
+<li id="related">Watch related videos</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="options" class="page">
+<p>Here you can customize your settings for Accessible YouTube. You can also access specific lists of movies stored in YouTube playlists. <strong>Note:</strong> you must have cookies enabled for the settings to be saved.</p>
+<p>To turn off some of the more advanced player options, uncheck the corresponding boxes below.</p>
+<form class="optionlist" onchange="saveOptions(this)">
+<input type="checkbox" name="ctrlenabled_restart" checked="true"/>Go to beginning<br/>
+<input type="checkbox" name="ctrlenabled_rewind" checked="true"/>Go back 10 seconds<br/>
+<input type="checkbox" name="ctrlenabled_fastfwd" checked="true"/>Go forward 10 seconds<br/>
+<input type="checkbox" name="ctrlenabled_watch_related" checked="true"/>Watch related videos
+</form>
+<p>To watch videos from a playlist, go to YouTube, find the playlist you want to watch, click through to the "View Playlist" page, and copy the Permalink URL into the box below. Then click Go. For more detailed instructions, click <span id="instructions-link" class="link">here</span>.</p>
+<form id="by_playlist" action="sway.html" onSubmit="postprocessByPlaylist()" method="get">
+<input id="disable_browsing" type="hidden" name="disablebrowsing" value="false"/>
+If you have a prepared list of videos and would like to disable browsing of any other videos, uncheck this box (this will also disable the "Watch Related" player control):<br />
+<input id="enable_browsing" type="checkbox" checked="true"/>Enable browsing<br/>
+Playlist URL:
+<input type="hidden" name="feedsource" value="playlist"/>
+<input id="playlist_ID" type="hidden" name="p" value=""/>
+<input id="enter_playlist_by_URL" type="text" value="http://www.youtube.com/view_play_list?p=12E6951194208C5D&search_query=kittens" style="width:400px;"/>
+<input type="submit" value="Go"/>
+</form>
+</div>
+<div id="instructions" class="page">
+<p>These instructions describe how to get the right URL from YouTube to watch videos from a playlist in Accessible YouTube.</p>
+<ol>
+<li><p>Go to <a href="http://www.youtube.com">www.youtube.com</a>. Find the main search bar, enter your search terms, and click "Search".</p><p><img src="i/instruc01_searching.png" alt="YouTube main search page"></p></li>
+<li><p>We want to narrow our search down to just playlists, so click "Playlists".</p><p><img src="i/instruc02_searchresults.png" alt="YouTube search results page"></p></li>
+<li><p>Find the playlist you want and click on its title.</p><p><img src="i/instruc03_playlistresults.png" alt="YouTube search results page, filtered for playlists"></p></li>
+<li><p>Copy the URL in the "Playlist/URL (Permalink)" box. That's the one you want.</p><p><img src="i/instruc04_playlistpage.png" alt="YouTube playlist page"></p></li>
+</ol>
+</div>
+</body>
+</html>
