@@ -9,6 +9,7 @@ dojo.ready(function(){
 
 dojo.declare('youtube.Main', null, {
 	aC: {
+		"devkey": "AI39si61JkTRRLScpnvH9VvPq4iTVsg0O15u5brhMLiDw6T_OES9rgaJ43fU9rBXQyU3OdVXXdqNU3Yn249xey7ygHFKYTdSOQ",
 		"title": "Accessible YouTube",
 		"vThumbs": 5,
 		"playerWidth": 720,
@@ -16,14 +17,14 @@ dojo.declare('youtube.Main', null, {
 		"thumbHeight": 99,
 		"currentPage": "splash",
 		"currentSearch": "",
-		"currentVideoId": "Vw4KVoEVcr0",
+		"currentVideoId": "",
 		"selectedVideoId": "",
 		"currentPlaylistPage": 1,
 		"currentPlaylistPos": 1,
 		"selectedPlaylistPos": 1,
 		"videoSelected": false,
 		"playerState": -1,
-		"playlistArr": {},
+		"playlistArr": [],
 		"vs": {}
 	},
 	constructor: function(){
@@ -61,6 +62,7 @@ dojo.declare('youtube.Main', null, {
 		
 		dojo.subscribe('/video-list/loaded', function(){
 			dojo.query('#video-list li').connect('onmouseenter', function(e){
+				/*
 				var vid = dojo.attr(this, "id"), index = -1;
 				if (vid) {
 					if (vid == app.aC.currentVideoId) return;
@@ -77,12 +79,21 @@ dojo.declare('youtube.Main', null, {
 					if (cname == "leftarrow") dojo.query('#video-list li:nth-child(1)').addClass('selected');
 					else if (cname == "rightarrow") dojo.query('#video-list li:nth-child('+(app.aC.vThumbs+2)+')').addClass('selected');
 				}
+				*/
 			}).connect('onclick', function(e){
 				var vid = dojo.attr(this, "id");
 				if (vid) {
 					if (vid == app.aC.currentVideoId) return;
-					app.loadVideo(vid);
-					app.aC.videoSelected = true;
+					if (!app.aC.videoSelected) {
+						app.loadVideo(vid);
+						app.aC.videoSelected = true;
+					}
+					dojo.forEach(app.aC.playlistArr, function(v,i){
+						if (index > -1) return;
+						if (v.id == vid) index = i;
+					});
+					dojo.query('#video-list li').removeClass('selected');
+					dojo.query('#video-list li:nth-child('+(index+2)+')').addClass('selected');
 					dojo.removeClass("control-list","inactive");
 				} else {
 					var cname = dojo.attr(this, "className").split(" ")[0];
@@ -137,14 +148,9 @@ dojo.declare('youtube.Main', null, {
 		dojo.style(id, { display: "block" });
 	},
 	loadPlayer: function(){
-		var a = {
-			allowScriptAccess: "always"
-		};
-		var b = {
-			id: "ytplayer",
-			allowFullScreen: "true"
-		};
-		swfobject.embedSWF("http://www.youtube.com/v/" + this.aC.currentVideoId + "?version=3&enablejsapi=1&playerapiid=ytplayer&autoplay=0&fs=1&hd=0&showsearch=0&showinfo=1&iv_load_policy=3", "iVD", this.aC.playerWidth, this.aC.playerHeight, "8", null, null, a, b)
+		var a = {allowScriptAccess: "always"};
+		var b = {id: "ytplayer"};
+		swfobject.embedSWF("http://www.youtube.com/apiplayer?version=3&enablejsapi=1&playerapiid=ytplayer&key="+this.aC.devkey, "iVD", this.aC.playerWidth, this.aC.playerHeight, "8", null, null, a, b)
 	},
 	getVideos: function(){
 		return dojo.io.script.get({
@@ -192,35 +198,6 @@ dojo.declare('youtube.Main', null, {
 			}, ul);
 			dojo.query('#video-list li:nth-child(2)').addClass('selected');
 			dojo.publish('/video-list/loaded');
-				// typemap['Date'].deserialize(item.uploaded);
-				/*
-				item.thumbnail.sqDefault
-				item.title
-				item.description
-				item.id
-				item.uploaded
-				item.viewCount
-				item.duration
-				
-accessControl: Object
-category: "Animals"
-content: Object
-description: "thanks to dailypicksandflicks.com for being the first to write about this video and to reddit.com for making it viral. And for all nice comments as well. :) lots of comments on video, cant read them all but a lot are spam and nasty - thats why they are now disabled, sorry."
-duration: 61
-favoriteCount: 163473
-id: "Vw4KVoEVcr0"
-likeCount: "262998"
-player: Object
-rating: 4.9169683
-ratingCount: 268573
-tags: Array[4]
-thumbnail: Object
-title: "Cat mom hugs baby kitten"
-updated: "2012-01-20T17:12:13.000Z"
-uploaded: "2011-05-26T16:31:13.000Z"
-uploader: "dragomirnet86"
-viewCount: 41506411
-				*/
 		});
 	},
 	goNextVideo: function(){
@@ -280,7 +257,7 @@ viewCount: 41506411
 		clearVideo: function(){
 			if (ytplayer) ytplayer.clearVideo();
 		},
-		setVolume: function(){
+		setVolume: function(v){
 			if (ytplayer) ytplayer.setVolume(v);
 		},
 		getDuration: function(){
