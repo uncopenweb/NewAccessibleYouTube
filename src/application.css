@@ -115,14 +115,6 @@ width:130px;
 width:130px;
 }
 
-.nowplaying {
-border:5px solid #d4a017 !important;
-}
-
-.selected {
-border:5px solid #f00 !important;
-}
-
 #video-list .info {
 border:1px solid #000;
 height:40px;
@@ -130,9 +122,13 @@ overflow:hidden;
 text-align:center;
 }
 
+.selected {
+border:5px solid #f00 !important;
+}
+
 #m {
 margin:0 auto;
-width:900px;
+width:920px;
 }
 
 #vD {
@@ -145,6 +141,10 @@ cursor:pointer;
 }
 
 #control-list li {
+border:5px solid transparent;
+float:right;
 line-height:3;
 list-style:none;
+padding-left:5px;
+width:158px;
 }
