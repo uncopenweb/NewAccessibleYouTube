@@ -23,11 +23,24 @@ dojo.declare('youtube.Main', null, {
 		"currentPlaylistPage": 1,
 		"currentPlaylistPos": 1,
 		"currentMenuPos": 1,
+		"currentPlayingPage": 0,
+		"currentPlayingPos": 0,
 		"videoSelected": false,
-		"controls": ["change","playpause","beginning","back","forward","related"],
 		"playerState": -1,
 		"playlistArr": [],
-		"vs": {}
+		"vs": {},
+		"ps": {
+			"unstarted": -1,
+			"ended": 0,
+			"playing": 1,
+			"paused": 2,
+			"buffering": 3,
+			"cued": 5
+		},
+		"controls": ["change","playpause","beginning","back","forward","related"],
+		"settings": {
+			"voice": 1
+		}
 	},
 	constructor: function(){
 		this.handleDimensions();
@@ -65,41 +78,47 @@ dojo.declare('youtube.Main', null, {
 		
 		dojo.subscribe('/video-list/loaded', function(){
 			dojo.query('#video-list li').connect('onclick', function(e){
-				var vid = dojo.attr(this, "id"), index = -1;
-				if (vid) {
-					if (vid == window.app.aC.currentVideoId) return;
-					window.app.loadVideo(vid);
-					window.app.aC.videoSelected = true;
-					var i = 0, begin = ((window.app.aC.currentPlaylistPage - 1) * window.app.aC.vThumbs), end = (window.app.aC.currentPlaylistPage * window.app.aC.vThumbs);
-					for (i = begin; i < end; i++) {
-						if (index > -1) break;
-						if (window.app.aC.playlistArr[i].id == vid) index = i;
-					}
-					window.app.aC.currentPlaylistPos = index;
-					console.log('begin',begin,'end',end,'pos',window.app.aC.currentPlaylistPos);
-					dojo.query('#video-list li').removeClass('selected');
-					dojo.query('#video-list li:nth-child('+(window.app.aC.currentPlaylistPos+2)+')').addClass('selected');
-					dojo.query('#control-list li:nth-child(1)').addClass('selected');
-					dojo.removeClass("control-list","inactive");
-					window.app.yt.playVideo();
-				} else {
-					var cname = dojo.attr(this, "className").split(" ")[0];
-					if (cname == "leftarrow") {
-						if (window.app.aC.currentPlaylistPage > 1) {
-							dojo.query('#video-list li').removeClass('selected');
-							dojo.query('#video-list li:nth-child(2)').addClass('selected');
-							--window.app.aC.currentPlaylistPage;
-							window.app.displayVideos();
+				var obj = this;
+				(dojo.hitch(app, function(){
+					var vid = dojo.attr(obj, "id"), index = -1;
+					if (vid) {
+						if (vid == this.aC.currentVideoId) return;
+						this.loadVideo(vid);
+						this.aC.videoSelected = true;
+						var i = 0, begin = ((this.aC.currentPlaylistPage - 1) * this.aC.vThumbs), end = (this.aC.currentPlaylistPage * this.aC.vThumbs);
+						for (i = begin; i < end; i++) {
+							if (index > -1) break;
+							if (this.aC.playlistArr[i].id == vid) index = i;
 						}
-					} else if (cname == "rightarrow") {
-						if (window.app.aC.currentPlaylistPage < 5) {
-							dojo.query('#video-list li').removeClass('selected');
-							dojo.query('#video-list li:nth-child(2)').addClass('selected');
-							++window.app.aC.currentPlaylistPage;
-							window.app.displayVideos();
+						this.aC.currentPlaylistPos = index+1;
+						this.aC.currentPlayingPos = this.aC.currentPlaylistPos;
+						this.aC.currentPlayingPage = this.aC.currentPlaylistPage;
+						this.aC.currentMenuPos = 1;
+						dojo.query('#video-list li').removeClass('selected nowplaying');
+						dojo.query('#video-list li:nth-child('+(this.aC.currentPlaylistPos+1)+')').addClass('nowplaying');
+						dojo.query('#control-list li').removeClass('selected');
+						dojo.query('#control-list li:nth-child(1)').addClass('selected');
+						dojo.removeClass("control-list","inactive");
+						this.yt.playVideo();
+					} else {
+						var cname = dojo.attr(obj, "className").split(" ")[0];
+						if (cname == "leftarrow") {
+							if (this.aC.currentPlaylistPage > 1) {
+								dojo.query('#video-list li').removeClass('selected');
+								dojo.query('#video-list li:nth-child(2)').addClass('selected');
+								--this.aC.currentPlaylistPage;
+								this.displayVideos('back');
+							}
+						} else if (cname == "rightarrow") {
+							if (this.aC.currentPlaylistPage < 5) {
+								dojo.query('#video-list li').removeClass('selected');
+								dojo.query('#video-list li:nth-child(2)').addClass('selected');
+								++this.aC.currentPlaylistPage;
+								this.displayVideos();
+							}
 						}
 					}
-				}
+				}))();
 			});
 		});
 		
@@ -108,16 +127,14 @@ dojo.declare('youtube.Main', null, {
 				switch(e.keyCode){
 					case dojo.keys.LEFT_ARROW:
 					case dojo.keys.UP_ARROW:
-						if (this.aC.videoSelected) { // do selected control
+						if (this.aC.videoSelected) {
 							var id = this.aC.controls[this.aC.currentMenuPos-1];
 							this.controlList(id);
 						} else {
-							// play selected video or next page
-							// switch to control list
 							if (this.aC.currentPlaylistPos == 0) {
 								if (this.aC.currentPlaylistPage > 1) {
 									--this.aC.currentPlaylistPage;
-									this.displayVideos();
+									this.displayVideos('back');
 								}
 							} else if (this.aC.currentPlaylistPos == (this.aC.vThumbs + 1)) {
 								if (this.aC.currentPlaylistPage < 5) {
@@ -133,23 +150,39 @@ dojo.declare('youtube.Main', null, {
 								var vIndex = ((this.aC.currentPlaylistPage - 1) * this.aC.vThumbs) + (this.aC.currentPlaylistPos - 1);
 								this.aC.currentVideoId = this.aC.playlistArr[vIndex].id;
 								this.loadVideo(this.aC.currentVideoId);
+								this.speech("Playing "+this.aC.playlistArr[vIndex].title);
 								this.yt.playVideo();
 							}
 						}
 					break;
 					case dojo.keys.RIGHT_ARROW:
 					case dojo.keys.DOWN_ARROW:
-						if (this.aC.videoSelected) { // move to next item in control list
+						if (this.aC.videoSelected) {
 							if (this.aC.currentMenuPos++ == 6) this.aC.currentMenuPos = 1;
 							dojo.query('#control-list li').removeClass('selected');
 							dojo.query('#control-list li:nth-child('+(this.aC.currentMenuPos)+')').addClass('selected');
-						} else { // move to next video
-							if (++this.aC.currentPlaylistPos == (this.aC.vThumbs + 2)) this.aC.currentPlaylistPos = 0;
+							if (playerState() == this.aC.ps.paused) {
+								var text = "";
+								dojo.query('#control-list li:nth-child('+(this.aC.currentMenuPos)+')').some(function(node){
+									text = node.innerHTML;
+								});
+								this.speech(text);
+							}
+						} else {
+							var lastPos = this.aC.vThumbs + 2;
+							if (this.aC.currentPlaylistPage == this.aC.vThumbsMaxPages) lastPos = this.aC.vThumbs + 1;
+							if (++this.aC.currentPlaylistPos == lastPos) {
+								if (this.aC.currentPlaylistPage == 1) this.aC.currentPlaylistPos = 1;
+								else this.aC.currentPlaylistPos = 0;
+							}
 							dojo.query('#video-list li').removeClass('selected');
 							dojo.query('#video-list li:nth-child('+(this.aC.currentPlaylistPos+1)+')').addClass('selected');
 							var vIndex = ((this.aC.currentPlaylistPage - 1) * this.aC.vThumbs) + (this.aC.currentPlaylistPos - 1);
-							this.aC.currentVideoId = this.aC.playlistArr[vIndex].id;
-							this.loadVideo(this.aC.currentVideoId);
+							if (vIndex > -1) {
+								this.aC.currentVideoId = this.aC.playlistArr[vIndex].id;
+								this.loadVideo(this.aC.currentVideoId);
+							}
+							this.speech(this.aC.playlistArr[vIndex].title);
 						}
 					break;
 				}
@@ -174,36 +207,42 @@ dojo.declare('youtube.Main', null, {
 		swfobject.embedSWF("http://www.youtube.com/apiplayer?version=3&enablejsapi=1&playerapiid=ytplayer&key="+this.aC.devkey, "iVD", this.aC.playerWidth, this.aC.playerHeight, "8", null, null, a, b)
 	},
 	displayVideos: function(){
-			this.currentPlaylistPos = 1;
-			var items = this.aC.playlistArr, ul = dojo.create("ul", {id:"video-list",className:"cf"}, "pW", "only"),
-				typemap = {
-					"Date": {
-						deserialize: function(value){
-							value = new Date(value);
-							var month = value.getMonth(), date  = value.getDate();
-							month = (month < 10) ? "0" + month : month;
-							date  = (date  < 10) ? "0" + date : date;
-							return value.getFullYear() + "-" + month + "-" + date;
-						}
+		if (arguments[0] == 'back') this.aC.currentPlaylistPos = 0;
+		else this.aC.currentPlaylistPos = 1;
+		var items = this.aC.playlistArr, ul = dojo.create("ul", {id:"video-list",className:"cf"}, "pW", "only"),
+			typemap = {
+				"Date": {
+					deserialize: function(value){
+						value = new Date(value);
+						var month = value.getMonth(), date  = value.getDate();
+						month = (month < 10) ? "0" + month : month;
+						date  = (date  < 10) ? "0" + date : date;
+						return value.getFullYear() + "-" + month + "-" + date;
 					}
-				};
+				}
+			};
+		if (this.aC.currentPlaylistPage == 1) leftClassName = " disabled";
+		else leftClassName = "";
+		dojo.create("li", {
+			className: 'leftarrow'+leftClassName,
+			innerHTML: '<img src="i/larrow.png"/><div class="info">Back</div>'
+		}, ul);
+		var i = 0, begin = ((this.aC.currentPlaylistPage - 1) * this.aC.vThumbs), end = (this.aC.currentPlaylistPage * this.aC.vThumbs);
+		for (i = begin; i < end; i++) {
 			dojo.create("li", {
-				className: 'leftarrow',
-				innerHTML: '<img src="i/larrow.png"/><div class="info">Back</div>'
+				id: items[i].id,
+				innerHTML: '<img src="'+items[i].thumbnail.sqDefault+'"/><div class="info" title="'+items[i].title+'">'+items[i].title+'</div>'
 			}, ul);
-			var i = 0, begin = ((this.aC.currentPlaylistPage - 1) * this.aC.vThumbs), end = (this.aC.currentPlaylistPage * this.aC.vThumbs);
-			for (i = begin; i < end; i++) {
-				dojo.create("li", {
-					id: items[i].id,
-					innerHTML: '<img src="'+items[i].thumbnail.sqDefault+'"/><div class="info">'+items[i].title+'</div>'
-				}, ul);
-			}
-			dojo.create("li", {
-				className: 'rightarrow',
-				innerHTML: '<img src="i/rarrow.png"/><div class="info">Next</div>'
-			}, ul);
-			dojo.query('#video-list li:nth-child(2)').addClass('selected');
-			dojo.publish('/video-list/loaded');
+		}
+		if (this.aC.currentPlaylistPage == this.aC.vThumbsMaxPages) rightClassName = " disabled";
+		else rightClassName = "";
+		dojo.create("li", {
+			className: 'rightarrow'+rightClassName,
+			innerHTML: '<img src="i/rarrow.png"/><div class="info">Next</div>'
+		}, ul);
+		if (!this.aC.videoSelected) dojo.query('#video-list li:nth-child('+(this.aC.currentPlaylistPos+1)+')').addClass('selected');
+		this.speech(items[begin].title);
+		dojo.publish('/video-list/loaded');
 	},
 	getVideos: function(){
 		var url = "http://gdata.youtube.com/feeds/api/videos";
@@ -232,6 +271,9 @@ dojo.declare('youtube.Main', null, {
 		this.aC.vThumbs = (Math.floor((vs.w - 20) / 140) - 2);
 		this.aC.vThumbsMax = this.aC.vThumbsMaxPages * this.aC.vThumbs;
 		this.aC.vs = vs;
+		dojo.query('.page').style({
+			height: vs.h - 57
+		});
 	},
 	loadVideo: function(id){
 		if (ytplayer) {
@@ -252,8 +294,8 @@ dojo.declare('youtube.Main', null, {
 	},
 	playPause: function(){
 		if (ytplayer) {
-			if (this.aC.playerState == 1) this.yt.pauseVideo();
-			else if (this.aC.playerState == 2) this.yt.playVideo();
+			if (playerState() == this.aC.ps.playing) this.yt.pauseVideo();
+			else if (playerState() == this.aC.ps.paused) this.yt.playVideo();
 		}
 	},
 	yt: {
@@ -286,8 +328,8 @@ dojo.declare('youtube.Main', null, {
 		switch(id){
 			case "playpause":
 				if (ytplayer) {
-					if (this.aC.playerState == 1) dojo.byId('playpause').innerHTML = 'Play';
-					else if (this.aC.playerState == 2) dojo.byId('playpause').innerHTML = 'Pause';
+					if (playerState() == this.aC.ps.playing) dojo.byId('playpause').innerHTML = 'Play';
+					else if (playerState() == this.aC.ps.paused) dojo.byId('playpause').innerHTML = 'Pause';
 				}
 				this.playPause();
 			break;
@@ -317,6 +359,14 @@ dojo.declare('youtube.Main', null, {
 				
 			break;
 		}
+	},
+	speech: function(data){
+		if (!this.aC.settings.voice) return;
+		uow.getAudio().then(function(a){
+			a.stop();
+			a.setProperty({name: 'rate', value: 150});
+			a.say({text: data.replace(/[^a-zA-Z0-9 ,.?]+/g,'')});
+		});
 	}
 });
 
@@ -329,13 +379,17 @@ function onYouTubePlayerReady(a){
 
 function onPlayerStateChange(a){
 	window.app.aC.playerState = a;
-	if (window.app.aC.playerState == 1) {
-	} else if (window.app.aC.playerState == 0) {
-		window.app.aC.goNextVideo();
+	if (playerState() == window.app.aC.ps.playing) {
+	} else if (playerState() == window.app.aC.ps.ended) {
+		window.app.goNextVideo();
 	}
 }
 
+function playerState(){
+	return window.app.aC.playerState;
+}
+
 function onPlayerError(a){
-	window.app.aC.goNextVideo();
+	window.app.goNextVideo();
 	console.log("Error! oPE Type: " + a);
 }

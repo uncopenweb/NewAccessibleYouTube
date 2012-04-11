@@ -78,6 +78,8 @@ width:32px;
 
 .page {
 display:none;
+overflow-x:hidden;
+overflow-y:auto;
 padding:10px;
 }
 
@@ -112,6 +114,7 @@ width:130px;
 }
 
 #video-list img {
+height:98px;
 width:130px;
 }
 
@@ -120,6 +123,14 @@ border:1px solid #000;
 height:40px;
 overflow:hidden;
 text-align:center;
+}
+
+#video-list .disabled {
+background-color:#ccc;
+}
+
+#video-list .disabled .info {
+color:#f00;
 }
 
 .nowplaying {
