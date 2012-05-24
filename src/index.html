@@ -49,7 +49,7 @@ Welcome to Accessible YouTube, an interface to <a href="http://www.youtube.com/"
 <ul id="control-list" class="inactive">
 <li id="change">Choose another movie</li>
 <li id="playpause">Pause</li>
-<li id="beginning">Go to beginning</li>
+<li id="restart">Go to beginning</li>
 <li id="back">Go back 10 seconds</li>
 <li id="forward">Go forward 10 seconds</li>
 <li id="related">Watch related videos</li>
@@ -60,23 +60,18 @@ Welcome to Accessible YouTube, an interface to <a href="http://www.youtube.com/"
 <div id="options" class="page">
 <p>Here you can customize your settings for Accessible YouTube. You can also access specific lists of movies stored in YouTube playlists. <strong>Note:</strong> you must have cookies enabled for the settings to be saved.</p>
 <p>To turn off some of the more advanced player options, uncheck the corresponding boxes below.</p>
-<form class="optionlist">
-<input type="checkbox" name="ctrlenabled_restart" checked="true"/>Go to beginning<br/>
-<input type="checkbox" name="ctrlenabled_rewind" checked="true"/>Go back 10 seconds<br/>
-<input type="checkbox" name="ctrlenabled_fastfwd" checked="true"/>Go forward 10 seconds<br/>
-<input type="checkbox" name="ctrlenabled_watch_related" checked="true"/>Watch related videos
-</form>
+<ul id="option-list">
+<li><input class="option" type="checkbox" name="restart" checked="true"/><span>Go to beginning</span></li>
+<li><input class="option" type="checkbox" name="back" checked="true"/><span>Go back 10 seconds</span></li>
+<li><input class="option" type="checkbox" name="forward" checked="true"/><span>Go forward 10 seconds</span></li>
+<li><input class="option" type="checkbox" name="related" checked="true"/><span>Watch related videos</span></li>
+<li><input class="option" type="checkbox" name="browsing" checked="true"/><span>Enable browsing</span></li>
+<li><input class="option" type="checkbox" name="playpause" checked="true"/><span>Enable pausing</span></li>
+<li><input class="option" type="checkbox" name="disable_voice" checked="true"/><span>Disable voice</span></li>
+</ul>
 <p>To watch videos from a playlist, go to YouTube, find the playlist you want to watch, click through to the "View Playlist" page, and copy the Permalink URL into the box below. Then click Go. For more detailed instructions, click <span id="instructions-link" class="link">here</span>.</p>
-<form id="by_playlist">
-<input id="disable_browsing" type="hidden" name="disablebrowsing" value="false"/>
-If you have a prepared list of videos and would like to disable browsing of any other videos, uncheck this box (this will also disable the "Watch Related" player control):<br />
-<input id="enable_browsing" type="checkbox" checked="true"/>Enable browsing<br/>
-Playlist URL:
-<input type="hidden" name="feedsource" value="playlist"/>
-<input id="playlist_ID" type="hidden" name="p" value=""/>
-<input id="enter_playlist_by_URL" type="text" value="http://www.youtube.com/view_play_list?p=12E6951194208C5D&search_query=kittens" style="width:400px;"/>
-<input type="submit" value="Go"/>
-</form>
+<p>If you have a prepared list of videos and would like to disable browsing of any other videos, uncheck "Enable Browsing" box above (this will also disable the "Watch Related" player control).</p>
+<div>Playlist URL:<input id="pB" type="text" value="http://www.youtube.com/view_play_list?p=12E6951194208C5D" spellcheck="false"/><input id="b_playlist" type="submit" value="Go"/></div>
 </div>
 <div id="instructions" class="page">
 <p>These instructions describe how to get the right URL from YouTube to watch videos from a playlist in Accessible YouTube.</p>
