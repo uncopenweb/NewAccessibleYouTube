@@ -443,7 +443,7 @@ dojo.declare('youtube.Main', null, {
 				}
 				this.playPause();
 			break;
-			case "beginning":
+			case "restart":
 				this.yt.seekTo(0);
 			break;
 			case "back":
