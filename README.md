@@ -4,3 +4,7 @@ Welcome to New Accessible YouTube, an interface to YouTube designed for people w
 -------------------------------
 `Creator: Andrew Gerst`
 `Based on AccessibleYouTube`
+
+To Do:
+* Speech on Back and Next
+* Reset selected video when home button is pressed
